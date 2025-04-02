@@ -13,7 +13,7 @@ class Pydance(Tk):
         super().__init__()
 
         self.title("PyDance")
-        self.geometry("1100x765")
+        self.geometry("1500x765")
         
         self.rec = True
         self.game = False
@@ -22,7 +22,7 @@ class Pydance(Tk):
         self.round = False
         self.score = 0
         self.range_start = 0
-        self.range_end = 5
+        self.range_end = 3
 
         frm = ttk.Frame(self, padding=10)
         frm.grid(row=0, column=0, sticky="nsew")
@@ -52,6 +52,10 @@ class Pydance(Tk):
 
         self.video_label = Label(self)
         self.video_label.grid(row=0, column=1)
+
+        self.img_lbl = Label(self)
+        self.img_lbl.grid(row=0, column=2)
+
 
         self.cap = cv2.VideoCapture(0)
         self.cap.set(3, 640)
@@ -104,7 +108,20 @@ class Pydance(Tk):
                     self.round_start_time = time.time() 
                     self.round = True
 
-                
+                    frame_img = Image.open(f"./img/{game_mov_left}_{game_mov_right}.png")
+
+                    width, height = frame_img.size 
+                    new_width = 300
+                    new_height = int((new_width / width) * height)
+
+                    frame_img_resized = frame_img.resize((new_width, new_height))
+                    frame_img_tk = ImageTk.PhotoImage(frame_img_resized)
+                    self.img_lbl.frame_img_tk = frame_img_tk
+                    self.img_lbl.config(image=frame_img_tk)
+
+
+
+
                 round_elapsed_time = time.time() - self.round_start_time
                 time_left = self.range_end - round_elapsed_time
                 self.after(0, self.time_text.set, f"Temps restant : {round(time_left, 1)}s")
