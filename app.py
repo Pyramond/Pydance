@@ -5,6 +5,8 @@ import threading
 import cv2
 import mediapipe as mp
 from fonction import process_frame, detect_arm_position
+import time
+import random
 
 class Pydance(Tk):
     def __init__(self):
@@ -12,53 +14,66 @@ class Pydance(Tk):
 
         self.title("PyDance")
         self.geometry("1100x765")
-
-        self.rec = True
         
-        # Frame principal
+        self.rec = True
+        self.game = False
+        self.start_time = None
+        self.var = None
+        self.round = False
+        self.score = 0
+        self.range_start = 5
+        self.range_end = 10
+
         frm = ttk.Frame(self, padding=10)
         frm.grid(row=0, column=0, sticky="nsew")
 
-        # Titre de l'application
         title_lbl = ttk.Label(frm, text="Pydance", font=("Times 24")).grid(column=0, row=0)
-
-        # Bouton de démarrage
         start_btn = ttk.Button(frm, text="Commencer", command=self.start).grid(column=0, row=1)
-
         stop_btn = ttk.Button(frm, text="Arreter", command=self.stop).grid(column=0, row=2)
 
-        # Image d'arrière-plan
         image = Image.open("./img/template.png")
         self.photo = ImageTk.PhotoImage(image)
 
-        # Texte de l'état
         self.text = StringVar()
-        self.text.set("...")
-        self.state_lbl = Label(self, textvariable=self.text, font=("Times 16"))
-        self.state_lbl.grid(row=2, column=1)  # Place le texte sous l'image
+        self.text.set("")
+        self.state_lbl = Label(self, textvariable=self.text, font=("Times 16")).grid(row=2, column=1)
 
-        # Label pour afficher la caméra
+        self.time_text = StringVar()
+        self.time_text.set("")
+        self.time_lbl = Label(self, textvariable=self.time_text, font=("Times 16")).grid(row=3, column=1)
+
+        self.order_text = StringVar()
+        self.order_text.set("")
+        self.order_lbl = Label(self, textvariable=self.order_text, font=("Times 16")).grid(row=4, column=1)
+
+        self.score_text = StringVar()
+        self.score_text.set("")
+        self.score_lbl = Label(self, textvariable=self.score_text, font=("Times 16")).grid(row=5, column=1)
+
         self.video_label = Label(self)
-        self.video_label.grid(row=0, column=1)  # Affiche l'image de la caméra au-dessus du texte
+        self.video_label.grid(row=0, column=1)
 
-        # Initialiser la caméra
         self.cap = cv2.VideoCapture(0)
         self.cap.set(3, 640)
         self.cap.set(4, 480)
 
 
     def start(self):
-        print("Commencer")
-        # Lancer la capture vidéo dans un thread séparé
+        
+        self.game = True
+        self.start_time = time.time()
+        
         self.quit_program = False
         self.video_thread = threading.Thread(target=self.display_camera)
         self.video_thread.start()
+
+        self.after(0, self.score_text.set, "Score: 0 points")
 
     def stop(self):
         self.rec = False
         self.quit_program = True
 
-        self.video_label.img_tk = self.photo  # Garder une référence pour éviter la suppression automatique
+        self.video_label.img_tk = self.photo
         self.video_label.config(image=self.photo)
 
     def change_state(self, state):
@@ -75,31 +90,48 @@ class Pydance(Tk):
                     break
 
                 left_arm, right_arm = detect_arm_position(results)
-                # Exemple d'un changement d'état
+
+                elapsed_time = round(time.time() - self.start_time,1)
+                
+                self.after(0, self.time_text.set, f"Temps: {elapsed_time}")
                 self.after(0, self.text.set, f"Gauche: {left_arm}    Droit: {right_arm}")
 
                 if results.pose_landmarks:
                     mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
 
-                # Convertir l'image de la caméra en format compatible avec Tkinter
+
+                if not self.round:
+                    game_mov_left = random.choice(["top", "bot", "mid", "none"])
+                    game_mov_right = random.choice(["top", "bot", "mid", "none"])
+                    game_time = elapsed_time
+                    self.round = True
+
+                self.after(0, self.order_text.set, f"Bras gauche: {game_mov_left}   Bras droit: {game_mov_right}")
+
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 img = Image.fromarray(frame_rgb)
                 img_tk = ImageTk.PhotoImage(image=img)
 
-                # Mettre à jour l'image dans le label Tkinter
-                self.video_label.img_tk = img_tk  # Garder une référence pour éviter la suppression automatique
+                self.video_label.img_tk = img_tk
                 self.video_label.config(image=img_tk)
 
-                # Pause pour éviter que la fenêtre ne se bloque
-                self.after(10)
+                if elapsed_time-game_time > self.range_start and elapsed_time-game_time < self.range_end:
+                    if(game_mov_right == right_arm and game_mov_left == left_arm):
+                       self.score += 1
+                       self.after(0, self.score_text.set, f"Score: {self.score} points")
+                       self.var = True
+                       self.round = False
+                       # self.range_end += 5
+                       # self.range_start += 5
+
+                print(f"Var : {self.var}")
 
     def on_close(self):
         self.quit_program = True
         self.cap.release()
         self.destroy()
 
-# Créer et démarrer l'application
 if __name__ == "__main__":
     app = Pydance()
-    app.protocol("WM_DELETE_WINDOW", app.on_close)  # Gérer la fermeture de la fenêtre
+    app.protocol("WM_DELETE_WINDOW", app.on_close)
     app.mainloop()
