@@ -17,7 +17,7 @@ class Pydance(Tk):
         
         # Frame principal
         frm = ttk.Frame(self, padding=10)
-        frm.grid()
+        frm.grid(row=0, column=0, sticky="nsew")
 
         # Titre de l'application
         title_lbl = ttk.Label(frm, text="Pydance", font=("Times 24")).grid(column=0, row=0)
@@ -29,20 +29,17 @@ class Pydance(Tk):
 
         # Image d'arrière-plan
         image = Image.open("./img/template.png")
-        self.photo = ImageTk.PhotoImage(image) 
-        photo_lbl = Label(self, image=self.photo)
-        photo_lbl.grid(column=2, row=2, padx=(500, 0))
+        self.photo = ImageTk.PhotoImage(image)
 
         # Texte de l'état
         self.text = StringVar()
         self.text.set("...")
-        self.state_lbl = Label(self, textvariable=self.text, font=("Times 16")).grid(column=1, row=10) 
-
-        # self.score_lbl = Label(self, textvariable=text, font=("Times 18")).grid(column=2, row=4)
+        self.state_lbl = Label(self, textvariable=self.text, font=("Times 16"))
+        self.state_lbl.grid(row=2, column=1)  # Place le texte sous l'image
 
         # Label pour afficher la caméra
         self.video_label = Label(self)
-        self.video_label.grid(row=0, column=1)
+        self.video_label.grid(row=0, column=1)  # Affiche l'image de la caméra au-dessus du texte
 
         # Initialiser la caméra
         self.cap = cv2.VideoCapture(0)
@@ -78,8 +75,7 @@ class Pydance(Tk):
                     break
 
                 left_arm, right_arm = detect_arm_position(results)
-                # print(f"Gauche: {left_arm}    Droit: {right_arm}")
-                # self.text.set("zojzdokzdo")
+                # Exemple d'un changement d'état
                 self.after(0, self.text.set, f"Gauche: {left_arm}    Droit: {right_arm}")
 
                 if results.pose_landmarks:
