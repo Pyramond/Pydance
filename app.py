@@ -79,9 +79,6 @@ class Pydance(Tk):
         self.video_label.img_tk = self.photo
         self.video_label.config(image=self.photo)
 
-    def change_state(self, state):
-        print("State changé")
-        self.text.set(state)
 
     def display_camera(self):
         mp_holistic = mp.solutions.holistic
