@@ -21,8 +21,8 @@ class Pydance(Tk):
         self.var = None
         self.round = False
         self.score = 0
-        self.range_start = 5
-        self.range_end = 10
+        self.range_start = 0
+        self.range_end = 5
 
         frm = ttk.Frame(self, padding=10)
         frm.grid(row=0, column=0, sticky="nsew")
@@ -59,7 +59,6 @@ class Pydance(Tk):
 
 
     def start(self):
-        
         self.game = True
         self.start_time = time.time()
         
@@ -91,20 +90,24 @@ class Pydance(Tk):
 
                 left_arm, right_arm = detect_arm_position(results)
 
-                elapsed_time = round(time.time() - self.start_time,1)
+                elapsed_time = round(time.time() - self.start_time, 1)
                 
-                self.after(0, self.time_text.set, f"Temps: {elapsed_time}")
+                self.after(0, self.time_text.set, f"Temps: {elapsed_time}s")
                 self.after(0, self.text.set, f"Gauche: {left_arm}    Droit: {right_arm}")
 
                 if results.pose_landmarks:
                     mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
 
-
                 if not self.round:
                     game_mov_left = random.choice(["top", "bot", "mid", "none"])
                     game_mov_right = random.choice(["top", "bot", "mid", "none"])
-                    game_time = elapsed_time
+                    self.round_start_time = time.time() 
                     self.round = True
+
+                
+                round_elapsed_time = time.time() - self.round_start_time
+                time_left = self.range_end - round_elapsed_time
+                self.after(0, self.time_text.set, f"Temps restant : {round(time_left, 1)}s")
 
                 self.after(0, self.order_text.set, f"Bras gauche: {game_mov_left}   Bras droit: {game_mov_right}")
 
@@ -115,16 +118,11 @@ class Pydance(Tk):
                 self.video_label.img_tk = img_tk
                 self.video_label.config(image=img_tk)
 
-                if elapsed_time-game_time > self.range_start and elapsed_time-game_time < self.range_end:
-                    if(game_mov_right == right_arm and game_mov_left == left_arm):
-                       self.score += 1
-                       self.after(0, self.score_text.set, f"Score: {self.score} points")
-                       self.var = True
-                       self.round = False
-                       # self.range_end += 5
-                       # self.range_start += 5
-
-                print(f"Var : {self.var}")
+                if round_elapsed_time >= self.range_end:
+                    if game_mov_right == right_arm and game_mov_left == left_arm:
+                        self.score += 1
+                        self.after(0, self.score_text.set, f"Score: {self.score} points")
+                    self.round = False
 
     def on_close(self):
         self.quit_program = True
