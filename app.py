@@ -54,7 +54,7 @@ class Pydance(Tk):
         self.video_label.grid(row=0, column=1)
 
         self.img_lbl = Label(self)
-        self.img_lbl.grid(row=0, column=2)
+        self.img_lbl.grid(row=0, column=3)
 
 
         self.cap = cv2.VideoCapture(0)
@@ -105,6 +105,7 @@ class Pydance(Tk):
                 if not self.round:
                     game_mov_left = random.choice(["top", "bot", "mid", "none"])
                     game_mov_right = random.choice(["top", "bot", "mid", "none"])
+                    
                     self.round_start_time = time.time() 
                     self.round = True
 
@@ -119,27 +120,28 @@ class Pydance(Tk):
                     self.img_lbl.frame_img_tk = frame_img_tk
                     self.img_lbl.config(image=frame_img_tk)
 
-
-
-
                 round_elapsed_time = time.time() - self.round_start_time
                 time_left = self.range_end - round_elapsed_time
-                self.after(0, self.time_text.set, f"Temps restant : {round(time_left, 1)}s")
 
+                self.after(0, self.time_text.set, f"Temps restant : {round(time_left, 1)}s")
                 self.after(0, self.order_text.set, f"Bras gauche: {game_mov_left}   Bras droit: {game_mov_right}")
 
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 img = Image.fromarray(frame_rgb)
-                img_tk = ImageTk.PhotoImage(image=img)
+                img_tk = ImageTk.PhotoImage(image=img.transpose(Image.FLIP_LEFT_RIGHT))
 
                 self.video_label.img_tk = img_tk
                 self.video_label.config(image=img_tk)
 
-                if round_elapsed_time >= self.range_end:
-                    if game_mov_right == right_arm and game_mov_left == left_arm:
-                        self.score += 1
-                        self.after(0, self.score_text.set, f"Score: {self.score} points")
+                
+                if game_mov_right == right_arm and game_mov_left == left_arm:
+                    
+                    self.score += int(round_elapsed_time + 1)
+
+                    self.after(0, self.score_text.set, f"Score: {self.score} points")
                     self.round = False
+                
+                if round_elapsed_time >= self.range_end: self.round = False
 
     def on_close(self):
         self.quit_program = True
