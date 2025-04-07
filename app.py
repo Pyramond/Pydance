@@ -7,6 +7,7 @@ import mediapipe as mp
 from fonction import process_frame, detect_arm_position
 import time
 import random
+from end import EndPage
 
 class Pydance(Tk):
     def __init__(self):
@@ -52,7 +53,7 @@ class Pydance(Tk):
         self.score_lbl = Label(self, textvariable=self.score_text, font=("Times 16")).grid(row=5, column=1)
 
         self.timer_text = StringVar()
-        self.timer_text.set("Temps restant: 60s")
+        self.timer_text.set("")
         self.timer_lbl = Label(self, textvariable=self.timer_text, font=("Times 16")).grid(row=6, column=1)
 
         self.video_label = Label(self)
@@ -85,6 +86,11 @@ class Pydance(Tk):
         self.video_label.img_tk = self.photo
         self.video_label.config(image=self.photo)
 
+    def openEndPage(self):
+        endPage = EndPage(str(self.score))
+        endPage.protocol("WM_DELETE_WINDOW", endPage.on_close)
+        endPage.mainloop()
+
 
     def display_camera(self):
         mp_holistic = mp.solutions.holistic
@@ -109,6 +115,7 @@ class Pydance(Tk):
 
                 if time_left <= 0: 
                     self.stop()
+                    self.openEndPage()
                     break
 
                 if results.pose_landmarks: mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
