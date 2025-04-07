@@ -24,7 +24,7 @@ class Pydance(Tk):
         self.score = 0
         self.range_start = 0
         self.range_end = 3
-        self.game_time = 10
+        self.game_time = 60
 
         frm = ttk.Frame(self, padding=10)
         frm.grid(row=0, column=0, sticky="nsew")
@@ -69,15 +69,27 @@ class Pydance(Tk):
 
 
     def start(self):
+        
         self.game = True
+        self.score = 0
+        self.round = False
         self.start_time = time.time()
         self.t = time.time()
-        
+        self.rec = True
         self.quit_program = False
+        self.range_start = 0
+        self.range_end = 3
+        self.game_time = 60
+        
+        self.after(0, self.score_text.set, "Score: 0 points")
+        self.after(0, self.time_text.set, "Temps: 0s")
+        self.after(0, self.timer_text.set, "Temps: 60s")
+        self.after(0, self.order_text.set, "")
+        self.after(0, self.text.set, "")
+
         self.video_thread = threading.Thread(target=self.display_camera)
         self.video_thread.start()
 
-        self.after(0, self.score_text.set, "Score: 0 points")
 
     def stop(self):
         self.rec = False
@@ -122,8 +134,9 @@ class Pydance(Tk):
 
                 if not self.round:
 
-                    game_mov_left = random.choice(["top", "bot", "mid", "none"])
-                    game_mov_right = random.choice(["top", "bot", "mid", "none"])
+                    movements = ["top", "bot", "mid", "none"]
+                    game_mov_left = random.choice(movements)
+                    game_mov_right = random.choice(movements)
                     
                     self.round_start_time = time.time() 
                     self.round = True
@@ -152,7 +165,6 @@ class Pydance(Tk):
                 self.video_label.img_tk = img_tk
                 self.video_label.config(image=img_tk)
 
-                
                 if game_mov_right == right_arm and game_mov_left == left_arm:
                     
                     self.score += int(round_elapsed_time + 1)
