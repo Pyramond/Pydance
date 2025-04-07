@@ -23,6 +23,7 @@ class Pydance(Tk):
         self.score = 0
         self.range_start = 0
         self.range_end = 3
+        self.game_time = 10
 
         frm = ttk.Frame(self, padding=10)
         frm.grid(row=0, column=0, sticky="nsew")
@@ -50,6 +51,10 @@ class Pydance(Tk):
         self.score_text.set("")
         self.score_lbl = Label(self, textvariable=self.score_text, font=("Times 16")).grid(row=5, column=1)
 
+        self.timer_text = StringVar()
+        self.timer_text.set("Temps restant: 60s")
+        self.timer_lbl = Label(self, textvariable=self.timer_text, font=("Times 16")).grid(row=6, column=1)
+
         self.video_label = Label(self)
         self.video_label.grid(row=0, column=1)
 
@@ -65,6 +70,7 @@ class Pydance(Tk):
     def start(self):
         self.game = True
         self.start_time = time.time()
+        self.t = time.time()
         
         self.quit_program = False
         self.video_thread = threading.Thread(target=self.display_camera)
@@ -83,23 +89,32 @@ class Pydance(Tk):
     def display_camera(self):
         mp_holistic = mp.solutions.holistic
         mp_drawing = mp.solutions.drawing_utils
+
         with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
+
             while not self.quit_program and self.rec:
+
                 frame, results = process_frame(self.cap, holistic)
-                if frame is None:
-                    break
+
+                if frame is None: break
 
                 left_arm, right_arm = detect_arm_position(results)
 
                 elapsed_time = round(time.time() - self.start_time, 1)
+                time_left = self.game_time - round(time.time() - self.t, 1)
                 
                 self.after(0, self.time_text.set, f"Temps: {elapsed_time}s")
+                self.after(0, self.timer_text.set, f"Temps: {time_left}s")
                 self.after(0, self.text.set, f"Gauche: {left_arm}    Droit: {right_arm}")
 
-                if results.pose_landmarks:
-                    mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
+                if time_left <= 0: 
+                    self.stop()
+                    break
+
+                if results.pose_landmarks: mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
 
                 if not self.round:
+
                     game_mov_left = random.choice(["top", "bot", "mid", "none"])
                     game_mov_right = random.choice(["top", "bot", "mid", "none"])
                     
