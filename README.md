@@ -1,10 +1,10 @@
 # Pydance
 
-S2G2 <br>
+SAE 2.06
 
-Quentin T'JAMPENS <br>
-Antoine FERRERO <br>
-Volkan ALTUNTAS <br>
+1ere année - S2 <br>
+Version light du jeu Just Dance fait en Python. <br>
+Projet de SAE 2.06
 
 
 # Lancer le projet
